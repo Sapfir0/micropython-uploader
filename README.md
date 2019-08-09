@@ -1,4 +1,7 @@
 
+## Micropython Uploader
+
+
 ### Скрипт умеет:
 
 * Рекурсивно обходить текущую директорию
@@ -9,6 +12,6 @@
 
 * ampy
 
-    pip3 install ampy
+        pip3 install ampy
 
 * micropython как прошивка для микроконтроллера
