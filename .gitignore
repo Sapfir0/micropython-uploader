@@ -2,3 +2,4 @@ build
 dist
 micropython_uploader.egg-info
 __pycache__
+.idea
