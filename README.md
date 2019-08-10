@@ -18,6 +18,11 @@ On Windows, do:
 
     pip install micropython-uploader
 
+## Usage
+
+In terminal run:
+    
+    mploader
 
 ### Requirements:
 
@@ -26,4 +31,4 @@ On Windows, do:
         pip3 install ampy
         
 
-* `micropython` as firmware for microcontrollerкак прошивка для микроконтроллера
+* `micropython` as firmware for microcontroller
