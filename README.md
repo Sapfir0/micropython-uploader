@@ -1,17 +1,29 @@
 
 ## Micropython Uploader
 
+### The script can:
 
-### Скрипт умеет:
+* Recursively bypass the current directory
+* Download detected files to mk. It was decided that you should push only `.py` files.
+* Delete all files with mk (ps directory is also a file)
 
-* Рекурсивно обходить текущую директорию
-* Загружать обнаруженные файлы на мк. Принято решение, что не стоит загружать скрытые и скриптовые файлы. 
-* Удалять все файлы с мк(пс директория тоже файл)
+## Installation
 
-### Требования для работы:
+On MacOS or Linux, in a terminal run the following command (assuming
+Python 3):
+
+    pip3 install --user micropython-uploader
+
+On Windows, do:
+
+    pip install micropython-uploader
+
+
+### Requirements:
 
 * ampy
 
         pip3 install ampy
+        
 
-* micropython как прошивка для микроконтроллера
+* `micropython` as firmware for microcontrollerкак прошивка для микроконтроллера

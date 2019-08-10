@@ -1,12 +1,12 @@
 import subprocess as sub
 import os
-from helpers.timeChecker import checkElapsedTime
+from uploader.timeChecker import checkElapsedTime
 import argparse
 
 listOfFiles, listOfDirs = [], []
 
 
-def upload(directory=".", removeOldFiles=True, compairFiles=False, excludedFiles=[]):
+def uploader(directory=".", removeOldFiles=True, compairFiles=False, excludedFiles=[]):
     if compairFiles:
         compareFiles()
     else:
@@ -162,11 +162,11 @@ def pushAllFiles(directory="."):
             push(pathToFile, pathToFile)
 
 
-parser = argparse.ArgumentParser(description="Micropython uploader")
-parser.add_argument('-c', '--cache', action="store_true", help="Disable remove old files from microcontroller. May be dangerous for u")
-parser.add_argument('--compare', action="store_true", help="It will compaired all files in mk and in current directory and push only differently files. ")
-args = parser.parse_args()
-upload(directory=".", removeOldFiles=not args.cache, compairFiles=args.compare, excludedFiles=[])
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Micropython uploader")
+    parser.add_argument('-c', '--cache', action="store_true", help="Disable remove old files from microcontroller. May be dangerous for u")
+    parser.add_argument('--compare', action="store_true", help="It will compaired all files in mk and in current directory and push only differently files. ")
+    args = parser.parse_args()
+    uploader(removeOldFiles=not args.cache, compairFiles=args.compare, excludedFiles=[])
 
-#
 
