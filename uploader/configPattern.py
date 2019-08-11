@@ -14,11 +14,11 @@ def getSpeed(preferSpeed=2):
 
 def createAmpyConfig(port, directory):
     comPort = getCom(port)
-    if os.path.exists(os.path.join(directory, ".ampy")):
-        return 0
-    with open(".ampy", "w") as f:
-        f.write(comPort)
-        f.write("\n")
-        f.write(getSpeed())
+    if not os.path.exists(os.path.join(directory, ".ampy")):
+        print("Config file .ampy was not found in current directory")
+        with open(".ampy", "w") as f:
+            f.write(comPort)
+            f.write("\r\n")
+            f.write(getSpeed())
+        print("Config file .ampy was created")
 
-    print("Config file .ampy was created")

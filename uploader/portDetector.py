@@ -9,8 +9,9 @@ def parseSerialPorts():
         print("Not found microdevice")
         return -1
     if len(serialList) > 1:
-        print("Many controllers, shoose one")
+        print("Many controllers, choose one")
     return serialList[0]
+
 
 def serialPorts():
     """ Lists serial port names

@@ -9,7 +9,7 @@ import argparse
 listOfFiles, listOfDirs = [], []
 
 
-def uploader(directory=".", removeOldFiles=True, compairFiles=False, excludedFiles=[]):
+def upload(directory=".", removeOldFiles=True, compairFiles=False, excludedFiles=[]):
     comport = parseSerialPorts()
     createAmpyConfig(comport, directory)
 
@@ -73,6 +73,7 @@ def recursiveWalk(directory="."):
             listOfFiles.append(file)
     return listOfFiles, listOfDirs
 
+
 def recursiveWalkPc(directory="."):
     files = os.listdir(directory)
     for file in files:
@@ -111,7 +112,6 @@ def compareFiles():
             f.write(foo2.encode('utf-8'))
 
         path2 = os.path.join(os.getcwd(), item)
-        #print(path1, path2)
         if path2 == '/home/sapfir/evil-meteostation/./lib':
             continue
         fileDifferent = not filecmp.cmp(path1, path2)
@@ -168,11 +168,18 @@ def pushAllFiles(directory="."):
             push(pathToFile, pathToFile)
 
 
-if __name__ == "__main__":
+def uploader():
     parser = argparse.ArgumentParser(description="Micropython uploader")
-    parser.add_argument('-c', '--cache', action="store_true", help="Disable remove old files from microcontroller. May be dangerous for u")
-    parser.add_argument('--compare', action="store_true", help="It will compaired all files in mk and in current directory and push only differently files. ")
+    parser.add_argument('-c', '--cache', action="store_true",
+                        help="Disable remove old files from microcontroller. May be dangerous for u")
+    parser.add_argument('--compare', action="store_true",
+                        help="It will compaired all files in mk and in current directory and push only differently files. ")
+    parser.add_argument('-d', '--directory', '--dir', default=".", action='store', dest='d',
+                        help='Directory to file. Prefer cover to \" \" ')
     args = parser.parse_args()
-    uploader(removeOldFiles=not args.cache, compairFiles=args.compare, excludedFiles=[])
+    print(args)
+    upload(directory=args.d, removeOldFiles=not args.cache, compairFiles=args.compare, excludedFiles=[])
+
+
 
 
