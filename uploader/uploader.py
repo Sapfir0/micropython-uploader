@@ -1,12 +1,18 @@
 import subprocess as sub
 import os
 from uploader.timeChecker import checkElapsedTime
+from uploader.portDetector import parseSerialPorts
+from uploader.configPattern import createAmpyConfig
+
 import argparse
 
 listOfFiles, listOfDirs = [], []
 
 
 def uploader(directory=".", removeOldFiles=True, compairFiles=False, excludedFiles=[]):
+    comport = parseSerialPorts()
+    createAmpyConfig(comport, directory)
+
     if compairFiles:
         compareFiles()
     else:

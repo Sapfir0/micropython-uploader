@@ -5,7 +5,7 @@ with open("README.md") as f:
 
 setup(
     name='micropython-uploader',
-    version='0.0.8',
+    version='0.1.2',
     packages=find_packages(),
     author='Alex Yurev',
     author_email='sapfir999999@yandex.ru',
