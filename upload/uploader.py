@@ -2,13 +2,12 @@ import subprocess as sub
 import os
 from upload.timeChecker import checkElapsedTime
 from upload.portDetector import parseSerialPorts
-from upload.configPattern import createAmpyConfig, parseStar
-from upload.config import getConfig
+from upload.configPattern import createAmpyConfig, parseStar, createConfigFile, list_conv
 
 import argparse
 
 listOfFiles, listOfDirs = [], []
-
+configName = "mploader-config.py"
 
 def uploader():
     parser = argparse.ArgumentParser(description="Micropython upload")
@@ -18,6 +17,8 @@ def uploader():
                         help="It will compaired all files in mk and in current directory and push only differently files. ")
     parser.add_argument('-d', '--directory', '--dir', default=".", action='store', dest='d',
                         help='Directory to file. Prefer cover to \" \" ')
+    parser.add_argument('--config', default=os.path.join(os.getcwd(), configName),
+                        help="Path to config file, it default name is mploader-config.py")
     args = parser.parse_args()
     print(args)
     upload(directory=args.d, removeOldFiles=not args.cache, compairFiles=args.compare, excludedFiles=[])
@@ -26,6 +27,7 @@ def uploader():
 def upload(directory=".", removeOldFiles=True, compairFiles=False, excludedFiles=[]):
     comport = parseSerialPorts()
     createAmpyConfig(comport, directory)
+    createConfigFile(directory)
 
     if compairFiles:
         compareFiles()
@@ -122,8 +124,12 @@ def removeOldFilesFromMC() -> None:
 
 @checkElapsedTime
 def pushAllFiles(directory="."):
+    with open(os.path.join(directory, configName), 'r') as f:
+        excludedDirs = list_conv(f.readlines(1)[0][15:])
+        includedFiles = list_conv(f.readlines(1)[0][16:])
+        print(excludedDirs, includedFiles)
+
     for root, dirs, files in os.walk(directory):
-        excludedDirs, includedFiles = getConfig()
         files[:] = parseStar(files, includedFiles, "include")
         dirs[:] = parseStar(dirs, excludedDirs, "exclude")  # возможно тут происходит лишний обход списка
 
