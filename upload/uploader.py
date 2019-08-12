@@ -1,12 +1,26 @@
 import subprocess as sub
 import os
-from uploader.timeChecker import checkElapsedTime
-from uploader.portDetector import parseSerialPorts
-from uploader.configPattern import createAmpyConfig
+from upload.timeChecker import checkElapsedTime
+from upload.portDetector import parseSerialPorts
+from upload.configPattern import createAmpyConfig, parseStar
+from upload.config import getConfig
 
 import argparse
 
 listOfFiles, listOfDirs = [], []
+
+
+def uploader():
+    parser = argparse.ArgumentParser(description="Micropython upload")
+    parser.add_argument('-c', '--cache', action="store_true",
+                        help="Disable remove old files from microcontroller. May be dangerous for u")
+    parser.add_argument('--compare', action="store_true",
+                        help="It will compaired all files in mk and in current directory and push only differently files. ")
+    parser.add_argument('-d', '--directory', '--dir', default=".", action='store', dest='d',
+                        help='Directory to file. Prefer cover to \" \" ')
+    args = parser.parse_args()
+    print(args)
+    upload(directory=args.d, removeOldFiles=not args.cache, compairFiles=args.compare, excludedFiles=[])
 
 
 def upload(directory=".", removeOldFiles=True, compairFiles=False, excludedFiles=[]):
@@ -22,45 +36,13 @@ def upload(directory=".", removeOldFiles=True, compairFiles=False, excludedFiles
     run()
 
 
-def push(input, output):
-    print(f"Pushing file {input}")
-    sub.call(["ampy", "put", input, output])
-
-
-def pull(item,  returnAllStatements=False):
-    p = sub.Popen(["ampy", "get", item], stdout=sub.PIPE, stderr=sub.PIPE)
+def operation(cmd, *args):
+    p = sub.Popen(["ampy", cmd, *args], stdout=sub.PIPE, stderr=sub.PIPE)
     out, err = p.communicate()
-    if returnAllStatements:
-        return p, err, out
-    else:
-        return p.returncode
+    # if err:
+    #     raise Exception(err) # мы не будем кидать исключение, т.к. нам мы аппелируем разными ретурнкодами
 
-
-def run(executable="main.py"):
-    sub.call(["ampy", "run", executable])
-
-
-def mkdir(pathToDir, returnAllStatements=False):
-    p = sub.Popen(["ampy", "mkdir", pathToDir], stdout=sub.PIPE, stderr=sub.PIPE)
-    p.communicate()
-    if returnAllStatements:
-        return p, err, out
-    else:
-        return p.returncode
-
-
-def rmdir(pathToDir):
-    print("Deleting directory", pathToDir)
-    sub.call(["ampy", "rmdir", pathToDir])
-
-
-def rm(file, returnAllStatements=False):
-    p = sub.Popen(["ampy", "rm", file], stdout=sub.PIPE, stderr=sub.PIPE)
-    out, err = p.communicate()
-    if returnAllStatements:
-        return p, err, out
-    else:
-        return p.returncode
+    return p.returncode
 
 
 def recursiveWalk(directory="."):
@@ -74,27 +56,15 @@ def recursiveWalk(directory="."):
     return listOfFiles, listOfDirs
 
 
-def recursiveWalkPc(directory="."):
-    files = os.listdir(directory)
-    for file in files:
-        if os.path.isdir(file):
-            #print(file)
-            listOfDirs.append(file)
-            recursiveWalkPc(file)
-        else:
-            listOfFiles.append(file)
-    return listOfFiles, listOfDirs
-
-
 @checkElapsedTime
 def compareFiles():
     import filecmp
     import tempfile
 
     listOfMCFiles, listOfMCDirs = recursiveWalk()  # получили названия всех файлов и директорий с мк
-    print(listOfMCFiles, listOfMCDirs)
     for item in listOfMCDirs:
         path = os.path.join("/tmp", item)
+        print("Requested file " + item + " from microcontroller")
         if not os.path.exists(path):
             os.mkdir(path)
 
@@ -110,17 +80,17 @@ def compareFiles():
             foo = foo[:-1]
             foo2 = foo.replace('\r\n', os.linesep)  # оч кроссплаторменно
             f.write(foo2.encode('utf-8'))
-
+# может быть баг, если файл на мк есть, а на пк нет
         path2 = os.path.join(os.getcwd(), item)
         if path2 == '/home/sapfir/evil-meteostation/./lib':
             continue
         fileDifferent = not filecmp.cmp(path1, path2)
 
         if fileDifferent:
-            print("Файл отличается " + item)
+            print("File are different " + item)
             push(item, item)
         else:
-            print("Файл не изменился " + item)
+            print("File equals " + item)
 
 
 def pcLs(directory="."):
@@ -149,37 +119,50 @@ def removeOldFilesFromMC() -> None:
         elif status:  # значит это директория
             rmdir(file)
 
+
 @checkElapsedTime
 def pushAllFiles(directory="."):
     for root, dirs, files in os.walk(directory):
-        dirs[:] = [d for d in dirs if not d.startswith('.')]
-        files[:] = [f for f in files if f.endswith("py")]
+        excludedDirs, includedFiles = getConfig()
+        files[:] = parseStar(files, includedFiles, "include")
+        dirs[:] = parseStar(dirs, excludedDirs, "exclude")  # возможно тут происходит лишний обход списка
 
         for directory in dirs:
             pathToDir = os.path.relpath(os.path.join(root, directory))
             status = mkdir(pathToDir)
-            if not status:
-                print(f"Creating folder {pathToDir}")
-            elif status:
+            if status:
                 print(f"Folder {pathToDir} is exists")
+            elif not status:
+                print(f"Creating folder {pathToDir}")
 
         for file in files:
             pathToFile = os.path.relpath(os.path.join(root, file))
             push(pathToFile, pathToFile)
 
 
-def uploader():
-    parser = argparse.ArgumentParser(description="Micropython uploader")
-    parser.add_argument('-c', '--cache', action="store_true",
-                        help="Disable remove old files from microcontroller. May be dangerous for u")
-    parser.add_argument('--compare', action="store_true",
-                        help="It will compaired all files in mk and in current directory and push only differently files. ")
-    parser.add_argument('-d', '--directory', '--dir', default=".", action='store', dest='d',
-                        help='Directory to file. Prefer cover to \" \" ')
-    args = parser.parse_args()
-    print(args)
-    upload(directory=args.d, removeOldFiles=not args.cache, compairFiles=args.compare, excludedFiles=[])
+def push(input, output):
+    print(f"Pushing file {input}")
+    return operation("put", input, output)
 
 
+def pull(item):
+    return operation("get", item)
+
+
+def run(executable="main.py"):
+    return operation("run", executable)
+
+
+def mkdir(pathToDir):
+    return operation("mkdir", pathToDir)
+
+
+def rmdir(pathToDir):
+    print("Deleting directory", pathToDir)
+    return operation("rmdir", pathToDir)
+
+
+def rm(file):
+    return operation("rm", file)
 
 

@@ -1,5 +1,6 @@
 build
 dist
 micropython_uploader.egg-info
+micropython_upload.egg-info
 __pycache__
 .idea

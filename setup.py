@@ -4,8 +4,8 @@ with open("README.md") as f:
     longDescr = f.read()
 
 setup(
-    name='micropython-uploader',
-    version='0.1.5',
+    name='micropython-upload',
+    version='0.2.2',
     packages=find_packages(),
     author='Alex Yurev',
     author_email='sapfir999999@yandex.ru',
@@ -26,10 +26,10 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8'
     ],
-    keywords='hardware micropython circuitpython uploaders uploader ampy',
+    keywords='hardware micropython circuitpython uploaders upload ampy',
     entry_points={
             'console_scripts': [
-                'mploader=uploader.uploader:uploader',
+                'mploader=upload.uploader:uploader',
             ],
     },
 )
