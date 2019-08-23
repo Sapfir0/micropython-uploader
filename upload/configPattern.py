@@ -59,23 +59,56 @@ def createAmpyConfig(port, directory):
         print("Config file .ampy was created")
 
 
-def parseStar(files, includeList, mode):
-    from fnmatch import fnmatch
-    if mode == "exclude":
-        array = files
-    else:
-        array = []
+def parseStar(files, ignoreList, method):
+    # files - реальные файлы в директории
+    # ignoreList - шаблон файлов которые мы будем включать дополнительно в пул(или наоборот если это директории)
+    # method - включать или выключать из поиска
+    def uniqueAppend(array: list, element):
+        if element not in array:
+            array.append(element)
+        return array
+
+    if method == "include":
+        method = True
+    elif method == "exclude":
+        method = False
+
+    symbol = "*"
+    permissableFiles = []
 
     for file in files:
-        for pattern in includeList:
-            if mode == "include":
-                if fnmatch(file, pattern):
-                    if file not in array:
-                        array.append(file)
-            if mode == "exclude":
-                if fnmatch(file, pattern):
-                    if file in array:
-                        array.remove(file)
-    return array
+        for exfile in ignoreList:
+            if exfile.startswith(symbol):
+                if method:
+                    if file.endswith(exfile[1:]):
+                        uniqueAppend(permissableFiles, file)
+                else:
+                    if not file.endswith(exfile[1:]):
+                        uniqueAppend(permissableFiles, file)
+            elif exfile.endswith(symbol):
+                if method:
+                    if file.startswith(exfile[:-1]):
+                        uniqueAppend(permissableFiles, file)
+                else:
+                    if not file.startswith(exfile[:-1]):
+                        uniqueAppend(permissableFiles, file)
+            elif exfile.find(symbol) != -1:  # т.е. нашли где-то звезду
+                raise Exception("Я не поддерживаю * в середине слова")
+            else:
+                if method:
+                    if file != exfile:
+                        uniqueAppend(permissableFiles, file)
+                else:
+                    if file == exfile:
+                        if file in permissableFiles:
+                            print("Убираем файл ", file)
+                            permissableFiles.remove(file)  # уберем, если в игнор списке точное совпадение
+    return permissableFiles
 
 
+def include(files, ignoreList):
+    return parseStar(files, ignoreList, "include")
+
+
+def exclude(files, ignoreList):
+    return parseStar(files, ignoreList, "exclude")

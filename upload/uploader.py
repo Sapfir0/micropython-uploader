@@ -2,7 +2,7 @@ import subprocess as sub
 import os
 from upload.timeChecker import checkElapsedTime
 from upload.portDetector import parseSerialPorts
-from upload.configPattern import createAmpyConfig, parseStar, createConfigFile, list_conv
+from upload.configPattern import createAmpyConfig, include, exclude, createConfigFile, list_conv
 
 import argparse
 
@@ -19,9 +19,25 @@ def uploader():
                         help='Directory to file. Prefer cover to \" \" ')
     parser.add_argument('--config', default=os.path.join(os.getcwd(), configName),
                         help="Path to config file, it default name is mploader-config.py")
+    parser.add_argument('--install-firmware', action='store_true')
+    parser.add_argument('--repl', action='store_true')
     args = parser.parse_args()
     print(args)
+    if args.install_firmware:
+        installFirmware()
+    if args.repl:
+        startREPL()
     upload(directory=args.d, removeOldFiles=not args.cache, compairFiles=args.compare, excludedFiles=[])
+
+
+def installFirmware(link="http://micropython.org/resources/firmware/esp8266-20190529-v1.11.bin"):
+    sub.call(["wget", "-q", link])
+    sub.call(["esptool.py", "erase_flash"])
+    sub.call(["esptool.py", "--baud 460800", "write_flash", "--flash_size=detect", "0", "esp8266-20190529-v1.11.bin"])
+
+
+def startREPL():
+    sub.call(["picocom", "/dev/ttyUSB0", "-b115200"])
 
 
 def upload(directory=".", removeOldFiles=True, compairFiles=False, excludedFiles=[]):
@@ -95,11 +111,6 @@ def compareFiles():
             print("File equals " + item)
 
 
-def pcLs(directory="."):
-    files = os.listdir(directory)
-    return files
-
-
 def ls(directory='') -> list:
     files: str = sub.check_output(["ampy", "ls", directory]).decode('utf-8')
     listOfFiles: list = files.split("\n/")
@@ -130,8 +141,8 @@ def pushAllFiles(directory="."):
         print(excludedDirs, includedFiles)
 
     for root, dirs, files in os.walk(directory):
-        files[:] = parseStar(files, includedFiles, "include")
-        dirs[:] = parseStar(dirs, excludedDirs, "exclude")  # возможно тут происходит лишний обход списка
+        files[:] = include(files, includedFiles)
+        dirs[:] = exclude(dirs, excludedDirs)  # возможно тут происходит лишний обход списка
 
         for directory in dirs:
             pathToDir = os.path.relpath(os.path.join(root, directory))
@@ -156,7 +167,8 @@ def pull(item):
 
 
 def run(executable="main.py"):
-    return operation("run", executable)
+    print("Executing")
+    sub.call(["ampy", "run", executable])
 
 
 def mkdir(pathToDir):

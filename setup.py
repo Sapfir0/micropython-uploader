@@ -4,8 +4,8 @@ with open("README.md") as f:
     longDescr = f.read()
 
 setup(
-    name='micropython-upload',
-    version='0.2.6',
+    name='micropython-uploader',
+    version='0.3.2',
     packages=find_packages(),
     author='Alex Yurev',
     author_email='sapfir999999@yandex.ru',
