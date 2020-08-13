@@ -9,7 +9,7 @@ setup(
     packages=find_packages(),
     author='Alex Yurev',
     author_email='sapfir999999@yandex.ru',
-    install_requires=['ampy'],
+    install_requires=['adafruit-ampy'],
     license='MIT',
 
     long_description=longDescr,
